@@ -20,11 +20,11 @@ func init() {
 	}
 
 	// Fallback for local development: attempt to read from the VERSION file.
-	// This avoids fragile absolute path assumptions by relying on the 
+	// This avoids fragile absolute path assumptions by relying on the
 	// standard practice of running `go run` or the binary from the repository root.
 	v, err := LoadFromFile("VERSION")
 	if err == nil && v != "" {
-		version = V
+		Version = v
 	}
 }
 
@@ -41,9 +41,9 @@ func LoadFromFile(path string) (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", fmt.Errorf("read version file: %w", err)
-	
+
 	}
-	v := strings.TrimSpace(strings(data))
+	v := strings.TrimSpace(string(data))
 	if v == "" {
 		return "", fmt.Errorf("version file is empty")
 	}
