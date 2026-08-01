@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/philaturo/zonebridge-platform/internal/platform/clock"
-	"github.com/philaturo/zonebridge-platform/internal/platform/server"
+//	"github.com/philaturo/zonebridge-platform/internal/platform/clock"
 )
 
 // mockClock implements clock.Clock for deterministic testing.
@@ -26,9 +24,9 @@ func TestHealth(t *testing.T) {
 
 	expectedTime := time.Date(2026, 7, 21, 12, 0, 0, 0, time.UTC)
 	mc := &mockClock{now: expectedTime}
-	logger := slog.Default()
 
-	handler := Health(mc, logger)
+	// Health now only takes the clock (no logger argument)
+	handler := Health(mc)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
 
@@ -42,9 +40,7 @@ func TestHealth(t *testing.T) {
 		t.Errorf("expected Content-Type application/json, got %s", rr.Header().Get("Content-Type"))
 	}
 
-	// Deserialize directly into the typed struct, no generic maps
-	var resp server.HealthResponse // Note: HealthResponse is in handlers package, but let's use local type or export it. 
-	// Correction: HealthResponse is defined in handlers package. Let's use it directly.
+	// Deserialize directly into the local typed struct (no "server." prefix)
 	var healthResp HealthResponse
 	if err := json.Unmarshal(rr.Body.Bytes(), &healthResp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)

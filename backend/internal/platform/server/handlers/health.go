@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/philaturo/zonebridge-platform/internal/platform/clock"
 	"github.com/philaturo/zonebridge-platform/internal/platform/response"
@@ -13,7 +14,7 @@ type HealthResponse struct {
 	Status    string `json:"status"`
 	Service   string `json:"service"`
 	Version   string `json:"version"`
-	Timestamp string `json:"timestamp"` // Using string for clean JSON serialization
+	Timestamp time.Time `json:"timestamp"` // Using string for clean JSON serialization
 }
 
 func Health(c clock.Clock) http.HandlerFunc {
@@ -22,11 +23,10 @@ func Health(c clock.Clock) http.HandlerFunc {
 			Status:    "healthy",
 			Service:   "zonebridge",
 			Version:   version.Get(),
-			Timestamp: c.Now().UTC().Format(http.TimeFormat),
+			Timestamp: c.Now().UTC(),
 		}
 
-		if err := server.JSON(w, http.StatusOK, resp); err != nil {
-			// Fallback to standard library if our helper fails catastrophically
+		if err := response.JSON(w, http.StatusOK, resp); err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 	}
