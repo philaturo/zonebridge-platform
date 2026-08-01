@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 	"testing"
-	"time"
 
 	platformerrors "github.com/philaturo/zonebridge-platform/internal/platform/errors"
 )
@@ -25,7 +24,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			for key, value := range tt.envVars {
 				t.Setenv(key, value)
 			}
