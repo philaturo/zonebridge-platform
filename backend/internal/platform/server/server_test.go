@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"log/slog"
+//	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -60,16 +60,16 @@ func TestServerLifecycle(t *testing.T) {
 	// Trigger graceful shutdown (simulating application orchestration)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	if err := srv.Stop(ctx); err != nil {
 		t.Errorf("unexpected error during shutdown: %v", err)
 	}
-	
+
 	// Verify Start() returned cleanly or with expected closed error
 	select {
 	case err := <-errChan:
 		if err != nil && err.Error() != "server startup failed: http: Server closed" {
-			// Note: http.ErrServerClosed is expected and handled inside Start(), 
+			// Note: http.ErrServerClosed is expected and handled inside Start(),
 			// but if it leaks, we catch it here.
 		}
 	case <-time.After(1 * time.Second):

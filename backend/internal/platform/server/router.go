@@ -2,6 +2,7 @@ package server
 
 import (
 	"log/slog"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -16,18 +17,18 @@ func NewRouter(logger *slog.Logger) *chi.Mux {
 
 	// 1. RequestID: Must be first to generate ID for all subsequent middleware
 	r.Use(platformmiddleware.RequestID)
-	
+
 	// 2. RealIP: Resolve true client IP before logging
 	r.Use(platformmiddleware.RealIP)
-	
+
 	// 3. Logger: Log the request with RequestID and RealIP already in context
 	r.Use(platformmiddleware.Logger(logger))
-	
+
 	// 4. Recoverer: Catch panics and log them with full context (including RequestID)
 	r.Use(platformmiddleware.Recoverer(logger))
-	
-	// 5. Timeout: Enforce request deadline (using Chi's robust, tested implementation)
-	r.Use(chimiddleware.Timeout)
+
+	// 5. Timeout: Enforce request deadline (using Chi's robust, tested implementation - Chi's timeout requires a duration)
+	r.Use(chimiddleware.Timeout(30 * time.Second))
 
 	return r
 }
