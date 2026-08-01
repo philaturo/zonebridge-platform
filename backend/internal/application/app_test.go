@@ -7,10 +7,8 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	t.Parallel()
-
-	// Set valid test environment variables to ensure config.Load() succeeds
-	t.Setenv("ZONEBRIDGE_SERVER_PORT", "0") // OS assigns random available port
+	// Use a standard valid port. New() only validates config, it doesn't bind.
+	t.Setenv("ZONEBRIDGE_SERVER_PORT", "8080")
 	t.Setenv("ZONEBRIDGE_LOG_LEVEL", "error")
 	t.Setenv("ZONEBRIDGE_LOG_FORMAT", "text")
 	t.Setenv("ZONEBRIDGE_ENVIRONMENT", "test")
@@ -28,9 +26,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNew_ConfigurationFailure(t *testing.T) {
-	t.Parallel()
-
-	// Set an invalid port to force config.Load() to fail
+	// Use an invalid port to force config.Load() to fail
 	t.Setenv("ZONEBRIDGE_SERVER_PORT", "99999")
 
 	app, err := New()
@@ -43,9 +39,8 @@ func TestNew_ConfigurationFailure(t *testing.T) {
 }
 
 func TestRun_GracefulShutdown(t *testing.T) {
-	t.Parallel()
-
-	t.Setenv("ZONEBRIDGE_SERVER_PORT", "0")
+	// Use a high ephemeral port to avoid "address already in use" conflicts during testing
+	t.Setenv("ZONEBRIDGE_SERVER_PORT", "59999")
 	t.Setenv("ZONEBRIDGE_LOG_LEVEL", "error")
 	t.Setenv("ZONEBRIDGE_LOG_FORMAT", "text")
 	t.Setenv("ZONEBRIDGE_ENVIRONMENT", "test")
@@ -57,7 +52,6 @@ func TestRun_GracefulShutdown(t *testing.T) {
 	}
 
 	// Use a cancellable context to simulate a shutdown trigger deterministically
-	// without relying on real OS signals, which are difficult to test portably.
 	ctx, cancel := context.WithCancel(context.Background())
 
 	errCh := make(chan error, 1)

@@ -50,7 +50,7 @@ func New() (*App, error) {
 
 	// 4. Construct router and register routes
 	router := server.NewRouter(lgr)
-	server.RegisterRoutes(router, clk, lgr)
+	server.RegisterRoutes(router, clk) // <-- FIXED: Removed the logger argument
 	lgr.Info("router initialized")
 
 	// 5. Construct HTTP server
@@ -68,10 +68,10 @@ func New() (*App, error) {
 }
 
 // Run owns the lifetime of the application. It starts the HTTP server,
-// waits for shutdown triggers (OS signals or context cancellation), 
+// waits for shutdown triggers (OS signals or context cancellation),
 // coordinates graceful shutdown, and blocks until the shutdown is complete.
 func (a *App) Run(ctx context.Context) error {
-	a.logger.Info("http server started")
+	a.logger.Info("starting http server")
 
 	// Channel to capture server startup errors
 	errCh := make(chan error, 1)
@@ -102,7 +102,7 @@ func (a *App) Run(ctx context.Context) error {
 	a.logger.Info("shutdown signal received", "reason", shutdownReason)
 	a.logger.Info("graceful shutdown started")
 
-	// Use context.Background() for shutdown to ensure the timeout 
+	// Use context.Background() for shutdown to ensure the timeout
 	// is respected even if the parent context is already cancelled.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.ServerShutdownTimeout)
 	defer cancel()
