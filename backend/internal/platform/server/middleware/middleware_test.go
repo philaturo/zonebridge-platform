@@ -1,18 +1,18 @@
 package middleware
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
+
+	// chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 func TestRequestID(t *testing.T) {
 	t.Parallel()
-	
+
 	handler := RequestID(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID, ok := r.Context().Value(requestIDKey).(string)
 		if !ok || reqID == "" {

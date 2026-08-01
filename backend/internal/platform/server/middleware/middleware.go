@@ -5,12 +5,13 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
 
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
-	platformserver "github.com/philaturo/zonebridge-platform/internal/platform/response"
+	"github.com/philaturo/zonebridge-platform/internal/platform/response"
 )
 
 // ctxKey is an unexported type for context keys to prevent collisions.
@@ -35,16 +36,17 @@ func RequestID(next http.Handler) http.Handler {
 func generateRequestID() string {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
+		// Security-critical operation. Failure indicates the OS cannot provide
+		// cryptographically secure randomness. This condition is unrecoverable.
 		panic(fmt.Errorf("critical failure: cannot generate secure request ID: %w", err))
 	}
 	return hex.EncodeToString(b)
 }
 
-// RealIP extracts the true client IP. 
-// Note: We implement this manually rather than using chi/middleware.RealIP 
-// to ensure the resolved IP is explicitly stored in our platform's unexported 
-// context key (realIPKey), guaranteeing downstream middleware and handlers 
-// retrieve it consistently without relying on Chi's internal context keys.
+// RealIP extracts the true client IP.
+// Note: We implement this manually rather than using chi/middleware.RealIP
+// to ensure the resolved IP is explicitly stored in our platform's unexported
+// context key (realIPKey), guaranteeing downstream middleware retrieves it consistently.
 func RealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := r.Header.Get("X-Forwarded-For")
@@ -65,9 +67,7 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			// Wrap the ResponseWriter to capture the status code
 			ww := chimiddleware.NewWrapResponseWriter(w, r.ProtoMajor)
-
 			next.ServeHTTP(ww, r)
 
 			duration := time.Since(start)
@@ -87,8 +87,7 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// Recoverer catches panics, logs them with full context using the platform logger,
-// and returns a standardized 500 Internal Server Error response.
+// Recoverer catches panics, logs them with full context, and returns a standardized 500 error.
 func Recoverer(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -103,8 +102,8 @@ func Recoverer(logger *slog.Logger) func(http.Handler) http.Handler {
 						"panic_value", err,
 					)
 
-					// Use standardized error response helper
-					platformserver.Error(w, logger, http.StatusInternalServerError, "Internal Server Error")
+					// Use the new leaf response package (exactly 3 arguments)
+					_ = response.Error(w, http.StatusInternalServerError, "Internal Server Error")
 				}
 			}()
 			next.ServeHTTP(w, r)
