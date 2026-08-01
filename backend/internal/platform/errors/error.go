@@ -10,4 +10,10 @@ var (
 
 	// ErrVersionNotFound indicates that the application version could not be determined.
 	ErrVersionNotFound = errors.New("version information not found")
+
+	// ErrServerStartup indicates that the server failed to start.
+	ErrServerStartup = errors.New("server startup failed")
+
+	// ErrGracefulShutdown indicates that graceful shutdown failed.
+	ErrGracefulShutdown = errors.New("graceful shutdown failed")
 )
